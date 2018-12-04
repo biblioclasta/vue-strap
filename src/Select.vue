@@ -12,7 +12,7 @@
     </div>
     <select ref="sel" v-model="val" :name="name" class="secret" :multiple="multiple" :required="required" :readonly="readonly" :disabled="disabled">
       <option v-if="required" value=""></option>
-      <option v-for="option in list" :value="option[optionsValue]">{{ option[optionsLabel] }}</option>
+      <option v-for="option in filteredOptions" :value="option[optionsValue]">{{ option[optionsLabel] }}</option>
     </select>
     <ul class="dropdown-menu">
       <template v-if="list.length">
@@ -55,6 +55,7 @@ export default {
     lang: {type: String, default: navigator.language},
     limit: {type: Number, default: 1024},
     minSearch: {type: Number, default: 0},
+    maxItems: {type: Number, default: 50},
     multiple: {type: Boolean, default: false},
     name: {type: String, default: null},
     options: {type: Array, default () { return [] }},
@@ -86,10 +87,15 @@ export default {
     canSearch () { return this.minSearch ? this.list.length >= this.minSearch : this.search },
     classes () { return [{open: this.show, disabled: this.disabled}, this.class, this.isLi ? 'dropdown' : this.inInput ? 'input-group-btn' : 'btn-group'] },
     filteredOptions () {
-      var search = (this.searchValue || '').toLowerCase()
-      return !search ? this.list : this.list.filter(el => {
-        return ~el[this.optionsLabel].toLowerCase().search(search)
-      })
+      let search = (this.searchValue || '').toLowerCase();
+      if (!search) {
+        return this.list.slice(0, this.maxItems);
+      }
+      let count  = 0;
+      return this.list.filter(el => {
+        count++;
+        return count <= this.maxItems && ~el[this.optionsLabel].toLowerCase().search(search);
+      });
     },
     hasParent () { return this.parent instanceof Array ? this.parent.length : this.parent },
     inInput () { return this.$parent._input },
@@ -339,4 +345,3 @@ export default {
 }
 .btn-group-justified .dropdown-menu { width: 100%; }
 </style>
-
